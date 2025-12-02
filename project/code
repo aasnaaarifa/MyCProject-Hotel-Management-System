@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <string.h>
+
+#define NUM_ROOMS 10
+#define NAME_LEN 50
+
+int rooms[NUM_ROOMS][3];
+char customer[NUM_ROOMS][NAME_LEN]; 
+char roomType[NUM_ROOMS][10] = {"AC", "Non-AC", "AC", "Non-AC", "AC", 
+                                "Non-AC", "Non-AC", "AC", "Non-AC", "AC"};
+int totalRevenue = 0;
+
+void init_rooms() {
+    for (int i = 0; i < NUM_ROOMS; ++i) {
+        rooms[i][0] = 101 + i;        
+        rooms[i][1] = 0;            
+        rooms[i][2] = 2000 + (i * 250); 
+        customer[i][0] = '\0';
+    }
+}
+void show_rooms() {
+    printf("\nRoom\tType\tStatus\t\tPrice\tGuest\n");
+    printf("----\t----\t------\t\t-----\t-----\n");
+    for (int i = 0; i < NUM_ROOMS; ++i) {
+        printf("%d\t%s\t%s\t%d\t%s\n",
+               rooms[i][0],
+               roomType[i],
+               rooms[i][1] ? "Occupied" : "Available",
+               rooms[i][2],
+               rooms[i][1] ? customer[i] : "-");
+    }
+}
+int find_room_index_by_number(int rno) {
+    for (int i = 0; i < NUM_ROOMS; ++i)
+        if (rooms[i][0] == rno) return i;
+    return -1;
+}
+void book_room() {
+	int rno, nights, foodOption = 0;
+	char name[NAME_LEN];
+	char foodType[10];
+	int foodCost = 0;
+	printf("\nEnter room number to book: ");
+	if (scanf("%d", &rno) != 1) { while(getchar()!='\n'); return; }
+	int idx = find_room_index_by_number(rno);
+	if (idx == -1) { printf("Room %d not found\n", rno); return; }
+	if (rooms[idx][1]) { printf("Room %d already occupied\n", rno);
+	return; }
+    
+    while (getchar() != '\n'); 
+    printf("Guest name: ");
+    fgets(name, NAME_LEN, stdin);
+    name[strcspn(name, "\n")] = '\0';
+
+    printf("Number of nights: ");
+    if (scanf("%d", &nights) != 1) { while(getchar()!='\n'); return; }
+
+    printf("Do you want food included? (1=Yes, 0=No): ");
+    if (scanf("%d", &foodOption) != 1) { while(getchar()!='\n'); foodOption = 0; }
+
+    if (foodOption) {
+        printf("Food prices per night:\n1. Veg = 500\n2. Non-Veg = 700\nChoose (1=Veg, 2=Non-Veg): ");
+        int choice;
+        if (scanf("%d", &choice) != 1) { while(getchar()!='\n'); choice = 1; }
+        if (choice == 1) {
+            foodCost = 500;
+            strcpy(foodType, "Veg");
+        } else {
+            foodCost = 700;
+            strcpy(foodType, "Non-Veg");
+        }
+    }
+
+    rooms[idx][1] = 1;
+    strncpy(customer[idx], name, NAME_LEN-1);
+    customer[idx][NAME_LEN-1] = '\0';
+
+    int bill = (rooms[idx][2] + foodCost) * nights;
+    totalRevenue += bill;
+
+    if (foodOption)
+        printf("Room %d booked for %s for %d night(s) with %s food. Bill = %d\n", 
+               rno, customer[idx], nights, foodType, bill);
+    else
+        printf("Room %d booked for %s for %d night(s). Bill = %d\n", rno, customer[idx], nights, bill);
+}
+
+
+void checkout_room() {
+    int rno;
+    printf("\nEnter room number to checkout: ");
+    if (scanf("%d", &rno) != 1) { while(getchar()!='\n'); return; }
+
+    int idx = find_room_index_by_number(rno);
+    if (idx == -1) { printf("Room %d not found\n", rno); return; }
+    if (!rooms[idx][1]) { printf("Room %d is already available\n", rno); return; }
+
+    rooms[idx][1] = 0;
+    customer[idx][0] = '\0';
+    printf("Checked out room %d. It is now available\nCOME AGAIN!!", rno);
+}
+
+int main() {
+    init_rooms();
+    int choice;
+    do {
+        printf("\n=== Hotel Management ===\n");
+        printf("1. Show rooms\n");
+        printf("2. Book room\n");
+        printf("3. Checkout room\n");
+        printf("4. Exit\n");
+        printf("Choose: ");
+        if (scanf("%d", &choice) != 1) { while(getchar()!='\n'); choice = -1; }
+        switch (choice) {
+            case 1: show_rooms(); break;
+            case 2: book_room(); break;
+            case 3: checkout_room(); break;
+            case 4: printf("Exiting\n"); break;
+            default: printf("Invalid option\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
